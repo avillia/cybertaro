@@ -34,10 +34,8 @@ class MinorArcane(Arcane):
 
 class Deck:
     cards: list[Arcane] = []
-    previous_seeds: set = set()
 
     def __init__(self):
-        self.previous_seed = 0
         for suit in range(1, 5):
             for order in range(1, 15):
                 self.cards.append(MinorArcane(suit=suit, order=order))
@@ -48,15 +46,18 @@ class Deck:
         return repr(self.cards)
 
     def shuffle(self, seed: str, amount: int) -> list[object]:
-        new_seed = bytearray(seed, "utf8")
-        if new_seed == self.previous_seeds:
-            random.shuffle(new_seed)
-        self.previous_seeds.add(new_seed[:50])
+        if len(seed) < 5 or len(set(seed)) < 2:
+            raise ValueError
+        if amount not in range(1, 79):
+            raise ValueError
+        new_seed = list(seed)
+        random.shuffle(new_seed)
+        new_seed = "".join(new_seed)
         random.seed(new_seed)
-        cards = random.sample(self.cards, len(self.cards))
-        for i in random.sample(range(len(cards)-1), 10):
-            cards[i].is_flipped = cards[i].is_flipped ^ True
-        return random.sample(cards, amount)
+        random.shuffle(self.cards)
+        for i in random.sample(range(len(self.cards)-1), random.randint(1, 4)):
+            self.cards[i].is_flipped = self.cards[i].is_flipped ^ True
+        return random.sample(self.cards, amount)
 
 
 def main():
@@ -72,8 +73,6 @@ def main():
 
         try:
             amount_of_cards = int(input("Введите количество карт: "))
-            if amount_of_cards not in range(1, 79):
-                raise ValueError
         except ValueError:
             print("Введите правильное число в границах от 1 до 78.")
             continue
@@ -84,7 +83,7 @@ def main():
                 amount=amount_of_cards
             )
         )
-        proceed = True if input("Продолжаем?(y/n): ") in "yну" else False
+        proceed = True if input("Продолжаем?(y/n): ") in "yнуYНУ" else False
 
 
 if __name__ == '__main__':
