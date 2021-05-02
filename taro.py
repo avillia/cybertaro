@@ -2,10 +2,12 @@ import random
 
 from dataclasses import dataclass
 
+
 @dataclass(order=True)
 class Arcane:
     order: int = 0
     is_flipped: bool = False
+
 
 @dataclass(order=True)
 class MajorArcane(Arcane):
@@ -15,6 +17,7 @@ class MajorArcane(Arcane):
                  'Дьявол', 'Башня','Звезда', 'Луна', 'Солнце', 'Суд', 'Мир']
         return (f"{names[self.order - 1]}"
                 f"{' перевёрнут.' if self.is_flipped else ''}")
+
 
 @dataclass(order=True)
 class MinorArcane(Arcane):
@@ -28,9 +31,10 @@ class MinorArcane(Arcane):
                 f" {suits_strings[self.suit - 1].capitalize()}"
                 f"{' перевёрнут.' if self.is_flipped else ''}")
 
+
 class Deck:
     cards: list[Arcane] = []
-    previous_seed: int
+    previous_seeds: set = set()
 
     def __init__(self):
         self.previous_seed = 0
@@ -44,38 +48,44 @@ class Deck:
         return repr(self.cards)
 
     def shuffle(self, seed: str, amount: int) -> list[object]:
-        seed = sum(int(byte) for byte in bytearray(seed, "utf8"))
-        if seed == self.previous_seed:
-            seed += 1
-        self.previous_seed = seed
-        random.seed(seed)
+        new_seed = bytearray(seed, "utf8")
+        if new_seed == self.previous_seeds:
+            random.shuffle(new_seed)
+        self.previous_seeds.add(new_seed[:50])
+        random.seed(new_seed)
         cards = random.sample(self.cards, len(self.cards))
         for i in random.sample(range(len(cards)-1), 10):
             cards[i].is_flipped = cards[i].is_flipped ^ True
         return random.sample(cards, amount)
 
-deck = Deck()
-print("Приветствуем в КиберТаро.")
-proceed = True
-while proceed:
-    try:
-        seed = input("Впишите последовательность, которую транслирует Ваше подсознание:\n")
-    except ValueError:
-        print("Квинтессенция недоступна, попробуйте другую последовательность.")
-        continue
 
-    try:
-        amount_of_cards = int(input("Введите количество карт: "))
-        if amount_of_cards not in range(1, 79):
-            raise ValueError
-    except ValueError:
-        print("Введите правильное число в границах от 1 до 78.")
-        continue
+def main():
+    deck = Deck()
+    print("Приветствуем в КиберТаро.")
+    proceed = True
+    while proceed:
+        try:
+            seed = input("Впишите последовательность, которую транслирует Ваше подсознание:\n")
+        except ValueError:
+            print("Квинтессенция недоступна, попробуйте другую последовательность.")
+            continue
 
-    print(
-        deck.shuffle(
-            seed=seed,
-            amount=amount_of_cards
+        try:
+            amount_of_cards = int(input("Введите количество карт: "))
+            if amount_of_cards not in range(1, 79):
+                raise ValueError
+        except ValueError:
+            print("Введите правильное число в границах от 1 до 78.")
+            continue
+
+        print(
+            deck.shuffle(
+                seed=seed,
+                amount=amount_of_cards
+            )
         )
-    )
-    proceed = True if input("Продолжаем?(y/n): ") in "yну" else False
+        proceed = True if input("Продолжаем?(y/n): ") in "yну" else False
+
+
+if __name__ == '__main__':
+    main()
